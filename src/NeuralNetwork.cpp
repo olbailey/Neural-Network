@@ -13,33 +13,21 @@
 
 using std::vector;
 
-NeuralNetwork::NeuralNetwork(vector<int> shape, const double learningRate)
-	: size(shape.size() - 1),
-	learningRate(learningRate) 
+NeuralNetwork::NeuralNetwork(const vector<vector<double>>& data, const vector<int>& labels, vector<int> shape, const double learningRate)
+	: size(shape.size() - 1), learningRate(learningRate), data(data), labels(labels), N(labels.size())
 {
 	for (size_t i = 0; i < size; i++) {
 		layers.emplace_back(shape[i], shape[i + 1]); // constructs Layer object within the push
-		// given it knows that you are pushing a layer object to it as that is what the vector stores
 	}
 }
 
-void NeuralNetwork::train(const vector<vector<double>>& data, const vector<int>& expectedOutputs, const int batchSize, const double trainingSplit) {
+void NeuralNetwork::train(const int batchSize, const double trainingSplit) {
 	std::cout << std::thread::hardware_concurrency() << std::endl;
-	const vector<vector<double>> randomData = randomiseData(data);
 
-	const size_t numDataPoints = randomData.size();
-
-	const long testingCutOff = static_cast<long>(std::floor(numDataPoints * trainingSplit));
-
-	const vector<vector<double>> trainingData = Numpty::deepCopy2D(randomData, 0, testingCutOff);
-	const vector<int> trainingExpectedOutputs = Numpty::copy(expectedOutputs, 0, testingCutOff);
-
-	const vector<vector<double>> testingData = Numpty::deepCopy2D(randomData, testingCutOff, numDataPoints);
-	const vector<int> testingExpectedOutputs = Numpty::copy(expectedOutputs, testingCutOff, numDataPoints);
+	loadData(trainingSplit);
 
 	clock_t beginTime = -30000;
 	double previousCost = 1000;
-	int count = 0;
 	bool stopped = false;
 
 	// Threads operation
@@ -47,7 +35,7 @@ void NeuralNetwork::train(const vector<vector<double>>& data, const vector<int>&
 
 	while (!stopped) {
 		// Train neural network
-		for (int i = 1; i < numDataPoints / batchSize; i++) {
+		for (int i = 1; i < N / batchSize; i++) {
 			const size_t startPoint = batchSize * (i - 1);
 			size_t endPoint = batchSize * i;
 
@@ -55,14 +43,16 @@ void NeuralNetwork::train(const vector<vector<double>>& data, const vector<int>&
 				endPoint = trainingData.size();
 
 			const vector<vector<double>> trainingBatch = Numpty::deepCopy2D(trainingData, startPoint, endPoint);
-			const vector<int> expectedBatch = Numpty::copy(trainingExpectedOutputs, startPoint, endPoint);
+			const vector<int> expectedBatch = Numpty::copy(trainingLabels, startPoint, endPoint);
 
-			learn(trainingBatch, expectedBatch);
+			const vector<vector<double>> predicts = forwardPass(trainingBatch);
+			const double lossValue = loss(predicts, expectedBatch);
+			gradientDescent(trainingBatch, expectedBatch, lossValue);
 		}
 
-		if (clock() - beginTime > 30000 || count % 1000 == 0) {
+		if (clock() - beginTime > 30000 || iterations % 1000 == 0) {
 			beginTime = clock();
-			const double costValue = loss(trainingData, trainingExpectedOutputs);
+			const double costValue = loss(trainingData, trainingLabels);
 
 			if (previousCost - costValue < 0.0001) {
 				stopped = true;
@@ -71,12 +61,12 @@ void NeuralNetwork::train(const vector<vector<double>>& data, const vector<int>&
 			previousCost = costValue;
 			std::cout << costValue << std::endl;
 
-			const double accuracy = cost(testingData, testingExpectedOutputs);
+			const double accuracy = cost(testingData, trainingLabels);
 			std::cout << accuracy << "/" << testingData.size() << '\n';
 		}
-		count++;
+		iterations++;
 	}
-	std::cout << loss(trainingData, trainingExpectedOutputs) << std::endl;
+	std::cout << loss(trainingData, trainingLabels) << std::endl;
 	DataStorage::saveData(*this, "");
 
 	if (terminateThread.joinable()) {
@@ -84,27 +74,21 @@ void NeuralNetwork::train(const vector<vector<double>>& data, const vector<int>&
 	}
 }
 
-vector<double> NeuralNetwork::calculateOutputs(vector<double> inputs) const {
-	for (size_t i = 0; i < size - 1; i++) {
-		inputs = layers[i].calculateLayerOutput(inputs, "Sigmoid");
-	}
-	inputs = layers[size - 1].calculateLayerOutput(inputs, "Softmax");
-
-	return inputs;
-}
-
-vector<vector<double>> NeuralNetwork::classify(const vector<vector<double>> &inputs) const {
+vector<vector<double>> NeuralNetwork::forwardPass(const vector<vector<double>>& inputs) const {
 	vector outputs(inputs.size(), vector<double>(2));
 
 	for (size_t i = 0; i < inputs.size(); i++) {
-		outputs[i] = calculateOutputs(inputs[i]);
+		outputs[i] = layers[size - 1].calculateLayerOutput(inputs[i], "Tanh");
+		for (size_t j = 1; j < size - 1; j++) {
+			outputs[i] = layers[j].calculateLayerOutput(outputs[i], "Tanh");
+		}
+		outputs[i] = layers[size - 1].calculateLayerOutput(outputs[i], "Softmax");
 	}
 
 	return outputs;
 }
 
-double NeuralNetwork::loss(const vector<vector<double>>& trainingData, const vector<int>& expectedOutputs) const {
-	const vector<vector<double>> predicts = classify(trainingData);
+double NeuralNetwork::loss(const vector<vector<double>>& predicts, const vector<int>& expectedOutputs) {
 	const vector<int> expectedCopy = Numpty::copy(expectedOutputs, 0, expectedOutputs.size());
 	const vector<int> correctedExpectedOutputs = Numpty::subtractScalar(expectedCopy, 1);
 
@@ -115,22 +99,13 @@ double NeuralNetwork::loss(const vector<vector<double>>& trainingData, const vec
 	return Numpty::mean(losses);
 }
 
-double NeuralNetwork::cost(const vector<vector<double> > &testData, const vector<int> &expectedOutputs) const {
-	const vector<vector<double>> predicts = classify(testData);
-	vector<int> predictedOutputChoices = Numpty::argmax(predicts);
-	Numpty::addScalar(predictedOutputChoices, 1);
-
-	return Numpty::equal(predictedOutputChoices, expectedOutputs);
-}
-
-void NeuralNetwork::learn(const vector<vector<double>>& trainingData, const vector<int> &expectedOutputs) {
-	const double originalCost = loss(trainingData, expectedOutputs);
+void NeuralNetwork::gradientDescent(const vector<vector<double>>& trainingData, const vector<int> &expectedOutputs, const double originalCost) {
 	constexpr double H = 0.0001;
 
 	for (Layer& layer : layers) {
 		double deltaCost;
 
-		for (size_t nodeIn = 0; nodeIn < layer.nodesOut; nodeIn++) {
+		for (size_t nodeIn = 0; nodeIn < layer.numNodes; nodeIn++) {
 			for (size_t nodeOut = 0; nodeOut < layer.nodesIn; nodeOut++) {
 				layer.weights[nodeIn][nodeOut] = layer.weights[nodeIn][nodeOut] + H;
 				deltaCost = loss(trainingData, expectedOutputs) - originalCost;
@@ -139,7 +114,7 @@ void NeuralNetwork::learn(const vector<vector<double>>& trainingData, const vect
 			}
 		}
 
-		for (size_t biasesIndex = 0; biasesIndex < layer.nodesOut; biasesIndex++) {
+		for (size_t biasesIndex = 0; biasesIndex < layer.numNodes; biasesIndex++) {
 			layer.biases[biasesIndex] = layer.biases[biasesIndex] + H;
 			deltaCost = loss(trainingData, expectedOutputs) - originalCost;
 			layer.biases[biasesIndex] = layer.biases[biasesIndex] - H;
@@ -150,11 +125,64 @@ void NeuralNetwork::learn(const vector<vector<double>>& trainingData, const vect
 	}
 }
 
+void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, const vector<int> &expectedOutputs) {
+
+}
+
+// double NeuralNetwork::cost(const vector<vector<double> > &testData, const vector<int> &expectedOutputs) const {
+// 	const vector<vector<double>> predicts = classify(testData);
+// 	vector<int> predictedOutputChoices = Numpty::argmax(predicts);
+// 	Numpty::addScalar(predictedOutputChoices, 1);
+//
+// 	return Numpty::equal(predictedOutputChoices, expectedOutputs);
+// }
+
+void NeuralNetwork::loadData(const double trainingSplit) {
+
+	const vector<size_t>& randomIndices = randomisedIndexes();
+	const auto randomData = randomiseVector(data, randomIndices);
+	const auto randomLabels = randomiseVector(labels, randomIndices);
+
+	const long testingCutOff = static_cast<long>(std::floor(N * trainingSplit));
+
+	trainingData = Numpty::deepCopy2D(randomData, 0, testingCutOff);
+	trainingLabels = Numpty::copy(randomLabels, 0, testingCutOff);
+
+	testingData = Numpty::deepCopy2D(randomData, testingCutOff, N);
+	testingLabels = Numpty::copy(randomLabels, testingCutOff, N);
+}
+
+vector<size_t> NeuralNetwork::randomisedIndexes() const {
+	vector<size_t> randomValues(N);
+	std::random_device dev;
+	std::mt19937 rng(dev());
+
+	for (int i = 0; i < N; ++i) {
+		std::uniform_int_distribution<std::mt19937::result_type> distribution(0,N - 1);
+		randomValues[i] = distribution(rng);
+	}
+
+	return randomValues;
+}
+
+template <typename T>
+vector<T> NeuralNetwork::randomiseVector(const vector<T>& values, const vector<size_t>& randomIndices) {
+	const size_t n = randomIndices.size();
+	vector<T> randomisedValues(n);
+
+	for (int i = 0; i < n; ++i) {
+		randomisedValues[i] = values[randomIndices[i]];
+	}
+
+	return randomisedValues;
+}
+
 void NeuralNetwork::setLayerValues(const std::string& filePath) {
 	DataStorage::retrieveData(*this, filePath);
 }
 
 std::vector<Layer>& NeuralNetwork::getLayers() {return layers;}
+
 
 void NeuralNetwork::threadExample(bool& stopped) {
 	std::string _;
@@ -162,20 +190,4 @@ void NeuralNetwork::threadExample(bool& stopped) {
 	std::cout << "Process Terminated" << std::endl;
 
 	stopped = true;
-}
-
-vector<vector<double>> NeuralNetwork::randomiseData(vector<vector<double>> dataCopy) {
-	vector<vector<double>> dataRandomised;
-	dataRandomised.reserve(dataCopy.size());
-	std::random_device dev;
-	std::mt19937 rng(dev());
-
-	for (int i = 0; i < dataCopy.size(); ++i) {
-		std::uniform_int_distribution<std::mt19937::result_type> distribution(0,dataCopy.size()-1);
-		const size_t randIndex = distribution(rng);
-		dataRandomised.push_back(dataCopy[randIndex]);
-		dataCopy.erase(dataCopy.begin()+randIndex);
-	}
-
-	return dataRandomised;
 }

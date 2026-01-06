@@ -20,7 +20,7 @@ public:
 	/**
 	 * Forward pass of layer
 	 * @param inputs The values
-	 * @param activationFunctionName Name of activation function to be used
+	 * @param activationFunctionName Name of activation function to be used (Sigmoid, Tanh, Softmax)
 	 * @return Vector values with activation function applied
 	 */
 	std::vector<double> calculateLayerOutput(const std::vector<double>& inputs, const std::string& activationFunctionName) const;

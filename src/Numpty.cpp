@@ -53,22 +53,22 @@ vector<vector<double>> Numpty::zeros(const size_t rows, const size_t columns) {
 }
 
 vector<int> Numpty::subtractScalar(vector<int> a, const int b) {
-	for (size_t i = 0; i < a.size(); i++) {
-		a[i] -= b;
+	for (int & i : a) {
+		i -= b;
 	}
 
 	return a;
 }
 
 void Numpty::addScalar(vector<int>& a, const int b) {
-	for (size_t i = 0; i < a.size(); i++) {
-		a[i] += b;
+	for (int & i : a) {
+		i += b;
 	}
 }
 
 void Numpty::multiplyByScalar(vector<double>& a, const double b) {
-	for (size_t i = 0; i < a.size(); i++) {
-		a[i] *= b;
+	for (double & i : a) {
+		i *= b;
 	}
 }
 
@@ -154,7 +154,7 @@ vector<vector<double>> Numpty::deepCopy2D(const vector<vector<double>> &input, c
 	return newArr;
 }
 
-vector<int> Numpty::copy(vector<int> input, size_t l, size_t r) {
+vector<int> Numpty::copy(const vector<int> &input, const size_t l, const size_t r) {
 	vector<int> newArr(r - l);
 
 	for (size_t i = 0; i < r - l; i++) {

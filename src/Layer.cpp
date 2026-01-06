@@ -65,8 +65,8 @@ void Layer::hyperbolicTangent(vector<double>& inputs) {
 			input = (e2x - 1) / (e2x + 1);
 		}
 		/* This is equivalent to (e^x - e^-x) / (e^x + e^-x)
-		 * because multiply fraction by e^x/e^x and it simplifies to
-		 * (e^2x - 1) / (e^2x + 1)
+		 * because multiply fraction by e^x/e^x,
+		 * and it simplifies to (e^2x - 1) / (e^2x + 1)
 		 */
 	}
 }

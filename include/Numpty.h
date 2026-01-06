@@ -39,7 +39,7 @@ namespace Numpty {
 	std::vector<std::vector<double>>
 		deepCopy2D(const std::vector<std::vector<double>> &input, size_t l, size_t r);
 
-	std::vector<int> copy(std::vector<int> input, size_t l, size_t r);
+	std::vector<int> copy(const std::vector<int> &input, size_t l, size_t r);
 };
 
 #endif
