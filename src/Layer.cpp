@@ -56,6 +56,18 @@ void Layer::sigmoid(vector<double>& inputs) {
 void Layer::hyperbolicTangent(vector<double>& inputs) {
 	for (double & input : inputs) {
 		input = std::tanh(input);
+		if (input > 20)
+			input = 1.0;
+		else if (input < -20)
+			input = -1.0;
+		else {
+			const double e2x = exp(2 * input);
+			input = (e2x - 1) / (e2x + 1);
+		}
+		/* This is equivalent to (e^x - e^-x) / (e^x + e^-x)
+		 * because multiply fraction by e^x/e^x and it simplifies to
+		 * (e^2x - 1) / (e^2x + 1)
+		 */
 	}
 }
 
