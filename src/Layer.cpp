@@ -10,25 +10,27 @@
 using std::vector;
 
 
-Layer::Layer(const size_t inputN, const size_t outputN) {
+Layer::Layer(const size_t inputN, const size_t currentN) {
 	nodesIn = inputN;
-	nodesOut = outputN;
+	numNodes = currentN;
 
-	costGradientWeights = Numpty::zeros(outputN, inputN);
-	costGradientBiases = Numpty::zeros(outputN);
-	weights = Numpty::random(outputN, inputN);
-	biases = Numpty::zeros(outputN);
+	costGradientWeights = Numpty::zeros(currentN, inputN);
+	costGradientBiases = Numpty::zeros(currentN);
+	weights = Numpty::random(currentN, inputN);
+	biases = Numpty::zeros(currentN);
 }
 
 vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName) const {
-	vector<double> layerOutputs(nodesOut);
+	vector<double> layerOutputs(numNodes);
 
-	for (size_t i = 0; i < nodesOut; i++) {
+	for (size_t i = 0; i < numNodes; i++) {
 		layerOutputs[i] = Numpty::dot(inputs, weights[i]) + biases[i];
 	}
 
 	if (activationFunctionName == "Sigmoid")
 		sigmoid(layerOutputs);
+	else if (activationFunctionName == "Tanh")
+		hyperbolicTangent(layerOutputs);
 	else if (activationFunctionName == "Softmax")
 		softmax(layerOutputs);
 
@@ -36,35 +38,41 @@ vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const s
 }
 
 void Layer::applyGradients(const double learningRate) {
-	for (size_t i = 0; i < weights.size(); i++) {
+	for (size_t i = 0; i < numNodes; i++) {
 		biases[i] -= costGradientBiases[i] * learningRate;
 
-		for (int j = 0; j < weights[i].size(); j++) {
+		for (int j = 0; j < nodesIn; j++) {
 			weights[i][j] -= costGradientWeights[i][j] * learningRate;
 		}
 	}
 }
 
 void Layer::sigmoid(vector<double>& inputs) {
-	for (size_t i = 0; i < inputs.size(); i++) {
-		inputs[i] = 1 / (1 + exp(-inputs[i]));
+	for (double & input : inputs) {
+		input = 1 / (1 + exp(-input));
+	}
+}
+
+void Layer::hyperbolicTangent(vector<double>& inputs) {
+	for (double & input : inputs) {
+		input = std::tanh(input);
 	}
 }
 
 void Layer::softmax(vector<double>& inputs) {
-	for (size_t i = 0; i < inputs.size(); i++) {
-		inputs[i] = exp(inputs[i]);
+	for (double & input : inputs) {
+		input = exp(input);
 	}
 
 	const double normBase = Numpty::sum(inputs);
 
-	for (size_t i = 0; i < inputs.size(); i++) {
-		inputs[i] = inputs[i] / normBase;
+	for (double & input : inputs) {
+		input = input / normBase;
 	}
 }
 
 std::string Layer::getShape() const {
-	return '(' + std::to_string(nodesIn) + ',' + std::to_string(nodesOut) + ')';
+	return '(' + std::to_string(nodesIn) + ',' + std::to_string(numNodes) + ')';
 }
 
 std::vector<std::vector<double> > Layer::getWeights() const {return weights;}
