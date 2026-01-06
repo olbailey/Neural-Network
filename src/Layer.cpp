@@ -1,5 +1,6 @@
 #include "Layer.h"
 
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include <string>
@@ -8,7 +9,7 @@
 #include "NumptyHelper.h"
 
 using std::vector;
-
+using std::exp;
 
 Layer::Layer(const size_t inputN, const size_t currentN) {
 	nodesIn = inputN;
@@ -55,7 +56,7 @@ void Layer::sigmoid(vector<double>& inputs) {
 
 void Layer::hyperbolicTangent(vector<double>& inputs) {
 	for (double & input : inputs) {
-		input = std::tanh(input);
+		checkInvalidNum(input);
 		if (input > 20)
 			input = 1.0;
 		else if (input < -20)
@@ -64,6 +65,8 @@ void Layer::hyperbolicTangent(vector<double>& inputs) {
 			const double e2x = exp(2 * input);
 			input = (e2x - 1) / (e2x + 1);
 		}
+		checkInvalidNum(input);
+
 		/* This is equivalent to (e^x - e^-x) / (e^x + e^-x)
 		 * because multiply fraction by e^x/e^x,
 		 * and it simplifies to (e^2x - 1) / (e^2x + 1)
@@ -72,14 +75,24 @@ void Layer::hyperbolicTangent(vector<double>& inputs) {
 }
 
 void Layer::softmax(vector<double>& inputs) {
+	const double maxVal = *std::ranges::max_element(inputs);
+
 	for (double & input : inputs) {
-		input = exp(input);
+		checkInvalidNum(input);
+		input = exp(input - maxVal);
+		checkInvalidNum(input);
 	}
 
 	const double normBase = Numpty::sum(inputs);
 
 	for (double & input : inputs) {
 		input = input / normBase;
+		checkInvalidNum(input);
+	}
+
+	if (Numpty::sum(inputs) < 0.99) {
+		std::cout << Numpty::sum(inputs);
+		throw std::runtime_error("softmax doesn't sum to 1");
 	}
 }
 
@@ -94,3 +107,8 @@ std::vector<double> Layer::getBiases() const {return biases;}
 void Layer::setWeights(const vector<vector<double>>& newWeights) {weights = newWeights;}
 
 void Layer::setBiases(const vector<double>& newBiases) {biases = newBiases;}
+
+void Layer::checkInvalidNum(const double x) {
+	if (std::isnan(x)) throw std::runtime_error("NaN detected!");
+	if (std::isinf(x)) throw std::runtime_error("Inf detected!");
+}

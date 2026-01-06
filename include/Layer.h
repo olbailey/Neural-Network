@@ -37,6 +37,8 @@ public:
 
 	void setBiases(const std::vector<double>& newBiases);
 
+	static void checkInvalidNum(double x);
+
 private:
 	static void sigmoid(std::vector<double> &inputs);
 

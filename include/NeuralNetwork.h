@@ -31,6 +31,8 @@ public:
 
 	void setLayerValues(const std::string &filePath);
 
+	static std::vector<size_t> randomisedIndexes(int n) ;
+
 private:
 
 	std::vector<std::vector<double>> forwardPass(const std::vector<std::vector<double>> &inputs) const;
@@ -43,11 +45,11 @@ private:
 	 */
 	static double loss(const std::vector<std::vector<double>>& predicts, const std::vector<int>& expectedOutputs);
 
-	double cost(const std::vector<std::vector<double> > &testData, const std::vector<int> &expectedOutputs) const;
+	static double cost(const std::vector<std::vector<double> > &predicts, const std::vector<int> &expectedOutputs) ;
 
 	void gradientDescent(const std::vector<std::vector<double>> &trainingData, const std::vector<int> &expectedOutputs, double originalCost);
 
-	void backpropagation(const std::vector<std::vector<double>> &trainingData, const std::vector<int> &expectedOutputs);
+	void backpropagation(const std::vector<std::vector<double>> &trainingData, const std::vector<int> &trainingLabels);
 
 	void loadData(double trainingSplit);
 

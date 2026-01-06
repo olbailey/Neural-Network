@@ -137,7 +137,10 @@ vector<double> Numpty::logarithm(const vector<vector<double>> &inputs, const vec
 	vector<double> outputs(trueIndex.size());
 
 	for (size_t i = 0; i < trueIndex.size(); i++) {
+		if (inputs[i][trueIndex[i]] <= 0) throw std::runtime_error("cannot perform log on values <= 0");
 		outputs[i] = std::log(inputs[i][trueIndex[i]]);
+		if (std::isnan(outputs[i])) throw std::runtime_error("LOG NaN detected!");
+		if (std::isinf(outputs[i])) throw std::runtime_error("LOG Inf detected!");
 	}
 
 	return outputs;
