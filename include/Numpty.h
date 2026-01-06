@@ -5,13 +5,13 @@
 #include <vector>
 
 namespace Numpty {
-	/* Generates a matrix holding double values 
-	that are random and normally distributed 
-	with a mean of 0 and a standard deviation of 1
-	\param nodesOut Number of rows
-	\param nodeIn Number of columns
-	\return A matrix holding double values 
-	that are random and normally distributed*/
+	/** Generates a matrix holding double values
+	* that are random and normally distributed
+	* with a mean of 0 and a standard deviation of 1
+	* @param nodesOut Number of rows
+	* @param nodesIn Number of columns
+	* @return A matrix holding double values that are random and normally distributed
+	*/
 	std::vector<std::vector<double>> random(size_t nodesOut, size_t nodesIn);
 
 	std::vector<double> zeros(size_t size);
@@ -24,6 +24,13 @@ namespace Numpty {
 
 	void multiplyByScalar(std::vector<double>& a, double b);
 
+	void multiplyByScalar(std::vector<std::vector<double>>& a, double b);
+
+	std::vector<std::vector<double>>
+		combineMatrices(const std::vector<std::vector<double>> &a, const std::vector<std::vector<double>> &b);
+
+	std::vector<double> combineVectors(const std::vector<double> &a, const std::vector<double> &b);
+
 	double sum(const std::vector<double>& values);
 
 	std::vector<int> argmax(const std::vector<std::vector<double>> &values);
@@ -35,6 +42,14 @@ namespace Numpty {
 	int equal(const std::vector<int> &a, const std::vector<int> &b);
 
 	std::vector<double> logarithm(const std::vector<std::vector<double>> &inputs, const std::vector<int> &);
+
+	std::vector<double> hotVectorOutput(const std::vector<double> &outputs, int label, int classesNum);
+
+	std::vector<std::vector<double>> transpose(std::vector<std::vector<double>> a);
+
+	std::vector<double>
+		hiddenErrors(const std::vector<std::vector<double>> &transposedWeights, const std::vector<double> &errorSignal);
+
 
 	std::vector<std::vector<double>>
 		deepCopy2D(const std::vector<std::vector<double>> &input, size_t l, size_t r);

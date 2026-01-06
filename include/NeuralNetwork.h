@@ -16,6 +16,7 @@ class NeuralNetwork {
 	const std::vector<std::vector<double>>& data;
 	const std::vector<int>& labels;
 	const size_t N;
+	int batchSize;
 
 	std::vector<std::vector<double>> trainingData;
 	std::vector<int> trainingLabels;
@@ -23,9 +24,9 @@ class NeuralNetwork {
 	std::vector<int> testingLabels;
 
 public:
-	NeuralNetwork(const std::vector<std::vector<double>>& data, const std::vector<int>& labels, std::vector<int> shape, double learningRate);
+	NeuralNetwork(const std::vector<std::vector<double>>& data, const std::vector<int>& labels, std::vector<int> shape, double learningRate, int batchSize);
 
-	void train(int batchSize, double trainingSplit);
+	void train(double trainingSplit);
 
 	std::vector<Layer>& getLayers();
 
@@ -35,7 +36,7 @@ public:
 
 private:
 
-	std::vector<std::vector<double>> forwardPass(const std::vector<std::vector<double>> &inputs) const;
+	void forwardPass(const std::vector<std::vector<double>> &inputs);
 
 	/**
 	 * Implementation of categorical cross-entropy loss
@@ -47,9 +48,9 @@ private:
 
 	static double cost(const std::vector<std::vector<double> > &predicts, const std::vector<int> &expectedOutputs) ;
 
-	void gradientDescent(const std::vector<std::vector<double>> &trainingData, const std::vector<int> &expectedOutputs, double originalCost);
-
 	void backpropagation(const std::vector<std::vector<double>> &trainingData, const std::vector<int> &trainingLabels);
+
+	void applyGradients();
 
 	void loadData(double trainingSplit);
 

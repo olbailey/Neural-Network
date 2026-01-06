@@ -15,6 +15,8 @@ public:
 	std::vector<std::vector<double>> weights;
 	std::vector<double> biases;
 
+	std::vector<std::vector<double>> batchOutputs;
+
 	Layer(size_t inputN, size_t currentN);
 
 	/**
@@ -23,7 +25,7 @@ public:
 	 * @param activationFunctionName Name of activation function to be used (Sigmoid, Tanh, Softmax)
 	 * @return Vector values with activation function applied
 	 */
-	std::vector<double> calculateLayerOutput(const std::vector<double>& inputs, const std::string& activationFunctionName) const;
+	std::vector<double> calculateLayerOutput(const std::vector<double>& inputs, const std::string& activationFunctionName);
 
 	void applyGradients(double learningRate);
 

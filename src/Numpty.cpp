@@ -72,6 +72,45 @@ void Numpty::multiplyByScalar(vector<double>& a, const double b) {
 	}
 }
 
+void Numpty::multiplyByScalar(vector<vector<double> > &a, const double b) {
+	for (vector<double> & arr : a)
+		for (double & v : arr)
+			v *= b;
+}
+
+vector<vector<double>> Numpty::combineMatrices(const vector<vector<double>> &a, const vector<vector<double>> &b) {
+	const int w = a.size();
+	int h = a[0].size();
+
+	if (w != b.size() || h != b[0].size())
+		throw std::runtime_error("Matrix shapes do not correspond for likewise addition");
+
+	vector newArr(w, vector<double>(h));
+	for (int i = 0; i < w; ++i) {
+		h = a[i].size();
+		if (h != b[i].size())
+			throw std::runtime_error("Matrix shapes do not correspond for likewise addition");
+		for (int j = 0; j < h; ++j) {
+			newArr[i][j] = a[i][j] + b[i][j];
+		}
+	}
+
+	return newArr;
+}
+
+vector<double> Numpty::combineVectors(const vector<double> &a, const vector<double> &b) {
+	const size_t n = a.size();
+	if (n != b.size())
+		throw std::runtime_error("Vector sizes do not correspond for likewise addition");
+
+	vector<double> newArr(n);
+	for (int i = 0; i < n; ++i) {
+		newArr[i] = a[i] + b[i];
+	}
+
+	return newArr;
+}
+
 double Numpty::sum(const vector<double>& values) {
 	double sum = 0;
 
@@ -145,6 +184,43 @@ vector<double> Numpty::logarithm(const vector<vector<double>> &inputs, const vec
 
 	return outputs;
 }
+
+vector<double> Numpty::hotVectorOutput(const vector<double>& outputs, const int label, const int classesNum) {
+	vector<double> values(classesNum);
+	const double output = outputs[label];
+
+	for (int i = 0; i < classesNum; ++i) {
+		if (i == label)
+			values[i] = output - 1;
+		else
+			values[i] = output;
+	}
+
+	return values;
+}
+
+vector<vector<double>> Numpty::transpose(const vector<vector<double>> a) {
+	vector newMatrix(a[0].size(), vector<double>(a.size()));
+
+	for (int i = 0; i < a.size(); ++i) {
+		for (int j = 0; j < a[i].size(); ++j) {
+			newMatrix[j][i] = a[i][j];
+		}
+	}
+
+	return newMatrix;
+}
+
+std::vector<double> Numpty::hiddenErrors
+		(const std::vector<std::vector<double> > &transposedWeights, const std::vector<double> &errorSignal) {
+	vector<double> newArr(transposedWeights.size());
+	for (int i = 0; i < transposedWeights.size(); ++i) {
+		newArr[i] = dot(transposedWeights[i], errorSignal);
+	}
+
+	return newArr;
+}
+
 
 vector<vector<double>> Numpty::deepCopy2D(const vector<vector<double>> &input, const size_t l, const size_t r) {
 	const size_t arrWidth = input[0].size();
