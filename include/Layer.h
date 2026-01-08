@@ -15,7 +15,8 @@ public:
 	std::vector<std::vector<double>> weights;
 	std::vector<double> biases;
 
-	std::vector<std::vector<double>> batchOutputs;
+	std::vector<std::vector<double>> batchInputs;
+	std::vector<std::vector<double>> batchErrorSignals;
 
 	Layer(size_t inputN, size_t currentN);
 

@@ -23,6 +23,7 @@ Layer::Layer(const size_t inputN, const size_t currentN) {
 
 vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName) {
 	vector<double> layerOutputs(numNodes);
+	batchInputs.push_back(inputs);
 
 	for (size_t i = 0; i < numNodes; i++) {
 		layerOutputs[i] = Numpty::dot(inputs, weights[i]) + biases[i];
@@ -35,7 +36,6 @@ vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const s
 	else if (activationFunctionName == "Softmax")
 		softmax(layerOutputs);
 
-	batchOutputs.push_back(layerOutputs);
 	return layerOutputs;
 }
 
