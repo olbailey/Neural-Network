@@ -62,7 +62,7 @@ namespace Numpty {
 
 	std::vector<double> logarithm(const std::vector<std::vector<double>> &inputs, const std::vector<int> &);
 
-	std::vector<double> hotVectorOutput(const std::vector<double> &outputs, int label, int classesNum);
+	std::vector<double> hotVectorOutput(const std::vector<double> &outputs, int label, size_t classesNum);
 
 	std::vector<std::vector<double>> transpose(std::vector<std::vector<double>> a);
 

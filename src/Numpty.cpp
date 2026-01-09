@@ -202,7 +202,7 @@ vector<double> Numpty::logarithm(const vector<vector<double>> &inputs, const vec
 	return outputs;
 }
 
-vector<double> Numpty::hotVectorOutput(const vector<double>& outputs, const int label, const int classesNum) {
+vector<double> Numpty::hotVectorOutput(const vector<double>& outputs, const int label, const size_t classesNum) {
 	vector<double> values(classesNum);
 
 	for (int i = 0; i < classesNum; ++i) {

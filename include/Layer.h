@@ -30,6 +30,26 @@ public:
 
 	void applyGradients(double learningRate);
 
+	/**
+	 * Used only for backpropagation of output layer. must be done before any other backpropagation
+	 * @param currentLayer Output layer
+	 * @param previousLayer Final hidden layer
+	 * @param trainingLabels Original batch training labels
+	 * @param batchSize
+	 */
+	static void backpropagationOutputLayer
+			(Layer &currentLayer, const Layer &previousLayer, const std::vector<int> &trainingLabels);
+
+	/**
+	 * Used only for hidden layer. must be done after its previous layer has been done
+	 * @param currentLayer Current hidden layer
+	 * @param previousLayer Layer that this layers outputs go to
+	 * @param trainingData original training data for batch
+	 * @param batchSize
+	 */
+	static void backpropagationHiddenLayer
+			(Layer &currentLayer, const Layer &previousLayer, const std::vector<std::vector<double>> &trainingData);
+
 	std::string getShape() const;
 
 	std::vector<std::vector<double>> getWeights() const;

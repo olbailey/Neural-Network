@@ -15,8 +15,10 @@
 
 using std::vector;
 
-NeuralNetwork::NeuralNetwork(const vector<vector<double>>& data, const vector<int>& labels, vector<int> shape, const double learningRate, const int batchSize)
-	: size(shape.size() - 1), learningRate(learningRate), data(data), labels(labels), N(labels.size()), batchSize(batchSize)
+NeuralNetwork::NeuralNetwork(const vector<vector<double>>& data, const vector<int>& labels,
+							vector<int> shape, const double learningRate, const int batchSize)
+	: size(shape.size() - 1), learningRate(learningRate), data(data),
+		labels(labels), N(labels.size()), batchSize(batchSize)
 {
 	for (size_t i = 0; i < size; i++) {
 		layers.emplace_back(shape[i], shape[i + 1]); // constructs Layer object within the push
@@ -91,52 +93,13 @@ double NeuralNetwork::loss(const vector<vector<double>>& predicts, const vector<
 
 void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, const vector<int> &trainingLabels) {
 	vector<double> networkErrors(size - 1);
-	const vector<int> correctedLabels = Numpty::subtractScalar(trainingLabels, 1);
-	const int batchSize = trainingData.size();
 
-	// output layer //
-	Layer& currentLayer = layers[size - 1];
-	const Layer& previousHiddenLayer = layers[size - 2];
+	Layer::backpropagationOutputLayer
+		(layers[size - 1], layers[size - 2], trainingLabels);
 
-	currentLayer.batchErrorSignals.clear();
-	currentLayer.batchErrorSignals.reserve(batchSize);
-	for (int j = 0; j < batchSize; ++j) {
-		vector<double> errorSignal = Numpty::hotVectorOutput(currentLayer.batchOutputs[j], correctedLabels[j], currentLayer.numNodes);
-
-		for (int numNodes = 0; numNodes < currentLayer.numNodes; ++numNodes) {
-			for (int nodesIn = 0; nodesIn < currentLayer.nodesIn; ++nodesIn) {
-				currentLayer.costGradientWeights[numNodes][nodesIn] += errorSignal[numNodes] * previousHiddenLayer.batchOutputs[j][nodesIn];
-			}
-			currentLayer.costGradientBiases[numNodes] += errorSignal[numNodes];
-		}
-
-		currentLayer.batchErrorSignals.push_back(errorSignal);
+	for (int i = size - 2; i >= 0; --i) {
+		Layer::backpropagationHiddenLayer(layers[i], layers[i + 1], trainingData);
 	}
-	Numpty::multiplyByScalar(currentLayer.costGradientWeights, 1.0/batchSize);
-	Numpty::multiplyByScalar(currentLayer.costGradientBiases, 1.0/batchSize);
-	currentLayer.batchOutputs.clear();
-
-	// hidden layer //
-	Layer& hiddenCurrentLayer = layers[size - 2];
-	const Layer& previousLayer = layers[size - 1];
-
-	const vector<vector<double>> transposedWeightMatrix = Numpty::transpose(previousLayer.weights);
-	for (int j = 0; j < batchSize; ++j) {
-		vector<double> hiddenErrors = Numpty::hiddenErrors(transposedWeightMatrix, previousLayer.batchErrorSignals[j]);
-		for (int i = 0; i < hiddenErrors.size(); ++i) {
-			hiddenErrors[i] *= 1 - std::pow(hiddenCurrentLayer.batchOutputs[j][i], 2);
-		}
-
-		for (int numNodes = 0; numNodes < hiddenCurrentLayer.numNodes; ++numNodes) {
-			for (int nodesIn = 0; nodesIn < hiddenCurrentLayer.nodesIn; ++nodesIn) {
-				hiddenCurrentLayer.costGradientWeights[numNodes][nodesIn] += hiddenErrors[numNodes] * trainingData[j][nodesIn];
-			}
-			hiddenCurrentLayer.costGradientBiases[numNodes] += hiddenErrors[numNodes];
-		}
-	}
-	Numpty::multiplyByScalar(hiddenCurrentLayer.costGradientWeights, 1.0/batchSize);
-	Numpty::multiplyByScalar(hiddenCurrentLayer.costGradientBiases, 1.0/batchSize);
-	hiddenCurrentLayer.batchOutputs.clear();
 }
 
 void NeuralNetwork::applyGradients() {

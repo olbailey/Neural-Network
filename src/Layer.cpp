@@ -51,6 +51,61 @@ void Layer::applyGradients(const double learningRate) {
 	Numpty::resetVectorToZero(costGradientBiases);
 }
 
+void Layer::backpropagationOutputLayer
+			(Layer &currentLayer, const Layer &previousLayer, const vector<int> &trainingLabels) {
+	const int batchSize = trainingLabels.size();
+	const vector<int> correctedLabels = Numpty::subtractScalar(trainingLabels, 1);
+
+	currentLayer.batchErrorSignals.clear();
+	currentLayer.batchErrorSignals.reserve(batchSize);
+
+	for (int j = 0; j < batchSize; ++j) {
+		vector<double> errorSignal =
+			Numpty::hotVectorOutput(currentLayer.batchOutputs[j], correctedLabels[j], currentLayer.numNodes);
+
+		for (int numNodes = 0; numNodes < currentLayer.numNodes; ++numNodes) {
+			for (int nodesIn = 0; nodesIn < currentLayer.nodesIn; ++nodesIn) {
+				currentLayer.costGradientWeights[numNodes][nodesIn]
+					+= errorSignal[numNodes] * previousLayer.batchOutputs[j][nodesIn];
+			}
+			currentLayer.costGradientBiases[numNodes] += errorSignal[numNodes];
+		}
+
+		currentLayer.batchErrorSignals.push_back(errorSignal);
+	}
+
+	Numpty::multiplyByScalar(currentLayer.costGradientWeights, 1.0/batchSize);
+	Numpty::multiplyByScalar(currentLayer.costGradientBiases, 1.0/batchSize);
+	currentLayer.batchOutputs.clear();
+}
+
+void Layer::backpropagationHiddenLayer
+		(Layer &currentLayer, const Layer &previousLayer, const std::vector<vector<double>> &trainingData) {
+	const int batchSize = trainingData.size();
+	const vector<vector<double>> transposedWeightMatrix = Numpty::transpose(previousLayer.weights);
+
+	for (int j = 0; j < batchSize; ++j) {
+		vector<double> hiddenErrors = Numpty::hiddenErrors(transposedWeightMatrix, previousLayer.batchErrorSignals[j]);
+		for (int i = 0; i < hiddenErrors.size(); ++i) {
+			hiddenErrors[i] *= 1 - std::pow(currentLayer.batchOutputs[j][i], 2);
+		}
+
+		for (int numNodes = 0; numNodes < currentLayer.numNodes; ++numNodes) {
+			for (int nodesIn = 0; nodesIn < currentLayer.nodesIn; ++nodesIn) {
+				currentLayer.costGradientWeights[numNodes][nodesIn] += hiddenErrors[numNodes] * trainingData[j][nodesIn];
+			}
+			currentLayer.costGradientBiases[numNodes] += hiddenErrors[numNodes];
+		}
+
+		currentLayer.batchErrorSignals.push_back(hiddenErrors);
+	}
+
+	Numpty::multiplyByScalar(currentLayer.costGradientWeights, 1.0/batchSize);
+	Numpty::multiplyByScalar(currentLayer.costGradientBiases, 1.0/batchSize);
+	currentLayer.batchOutputs.clear();
+}
+
+
 void Layer::sigmoid(vector<double>& inputs) {
 	for (double & input : inputs) {
 		input = 1 / (1 + exp(-input));
