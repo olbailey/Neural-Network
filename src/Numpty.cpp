@@ -78,6 +78,16 @@ void Numpty::multiplyByScalar(vector<vector<double> > &a, const double b) {
 			v *= b;
 }
 
+void Numpty::resetMatrixToZero(vector<vector<double>> a) {
+	for (auto &row : a)
+		std::ranges::fill(row, 0.0);
+}
+
+void Numpty::resetVectorToZero(std::vector<double> a) {
+		std::ranges::fill(a, 0.0);
+}
+
+
 vector<vector<double>> Numpty::combineMatrices(const vector<vector<double>> &a, const vector<vector<double>> &b) {
 	const int w = a.size();
 	int h = a[0].size();

@@ -26,6 +26,10 @@ namespace Numpty {
 
 	void multiplyByScalar(std::vector<std::vector<double>>& a, double b);
 
+	void resetMatrixToZero(std::vector<std::vector<double>> a);
+
+	void resetVectorToZero(std::vector<double> a);
+
 	std::vector<std::vector<double>>
 		combineMatrices(const std::vector<std::vector<double>> &a, const std::vector<std::vector<double>> &b);
 

@@ -47,6 +47,8 @@ void Layer::applyGradients(const double learningRate) {
 			weights[i][j] -= costGradientWeights[i][j] * learningRate;
 		}
 	}
+	Numpty::resetMatrixToZero(costGradientWeights);
+	Numpty::resetVectorToZero(costGradientBiases);
 }
 
 void Layer::sigmoid(vector<double>& inputs) {

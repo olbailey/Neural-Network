@@ -59,6 +59,10 @@ private:
 	std::vector<T> randomiseVector(const std::vector<T>& values, const std::vector<size_t>& randomIndices);
 
 	static void threadExample(bool& stopped);
+
+	// For debugging
+	void printLayerValues();
+
 };
 
 #endif // !NEURALNETWORK_H
