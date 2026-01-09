@@ -17,7 +17,7 @@ Layer::Layer(const size_t inputN, const size_t currentN) {
 
 	costGradientWeights = Numpty::zeros(currentN, inputN);
 	costGradientBiases = Numpty::zeros(currentN);
-	weights = Numpty::random(currentN, inputN);
+	weights = Numpty::xavier(currentN, inputN);
 	biases = Numpty::zeros(currentN);
 }
 
@@ -59,15 +59,7 @@ void Layer::sigmoid(vector<double>& inputs) {
 
 void Layer::hyperbolicTangent(vector<double>& inputs) {
 	for (double & input : inputs) {
-		checkInvalidNum(input);
-		if (input > 20)
-			input = 1.0;
-		else if (input < -20)
-			input = -1.0;
-		else {
-			const double e2x = exp(2 * input);
-			input = (e2x - 1) / (e2x + 1);
-		}
+		input = std::tanh(input);
 		checkInvalidNum(input);
 
 		/* This is equivalent to (e^x - e^-x) / (e^x + e^-x)

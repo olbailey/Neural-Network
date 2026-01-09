@@ -11,23 +11,35 @@
 using std::vector;
 
 vector<vector<double>> Numpty::random(const size_t nodesOut, const size_t nodesIn) {
-	const unsigned long long seed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::mt19937 engine(seed);
-
 	constexpr double mean = 0;
 	constexpr double standardDeviation = 1;
 
 	std::normal_distribution distribution(mean, standardDeviation);
 
-	vector arr(nodesOut, vector<double>(nodesIn));
+	vector matrix(nodesOut, vector<double>(nodesIn));
 
 	for (size_t i = 0; i < nodesOut; i++) {
 		for (size_t j = 0; j < nodesIn; j++) {
-			arr[i][j] = distribution(engine);
+			matrix[i][j] = distribution(engine);
 		}
 	}
 
-	return arr;
+	return matrix;
+}
+
+vector<vector<double>> Numpty::xavier(const size_t nodesOut, const size_t nodesIn) {
+	const double limit = std::sqrt(6.0 / (nodesIn + nodesOut));
+	std::uniform_real_distribution dist(-limit, limit);
+
+	vector matrix(nodesOut, vector<double>(nodesIn));
+
+	for (size_t i = 0; i < nodesOut; i++) {
+		for (size_t j = 0; j < nodesIn; j++) {
+			matrix[i][j] = dist(engine);
+		}
+	}
+
+	return matrix;
 }
 
 vector<double> Numpty::zeros(const size_t size) {
