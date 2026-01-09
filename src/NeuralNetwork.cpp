@@ -104,7 +104,7 @@ void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, 
 
 void NeuralNetwork::applyGradients() {
 	for (Layer & layer : layers) {
-		layer.applyGradients(learningRate);
+		layer.applyGradients(learningRate, beta);
 	}
 }
 
@@ -173,11 +173,11 @@ void NeuralNetwork::printNetworkPerformance() {
 	const double costValue = loss(testingPredicts, testingLabels);
 
 	std::cout << "Iterations: " << iterations << '\n';
-
-	std::cout << costValue << std::endl;
+	// std::cout << "Training Data Loss: " << loss(forwardPass(trainingData), trainingLabels) << std::endl;
+	std::cout << "Testing Data Loss: " << costValue << std::endl;
 
 	const double accuracy = cost(testingPredicts, testingLabels);
-	std::cout << accuracy << "/" << testingData.size() << '\n' << '\n';
+	std::cout << "Accuracy: " << accuracy << "/" << testingData.size() << '\n' << '\n';
 }
 
 void NeuralNetwork::setLayerValues(const std::string& filePath) {

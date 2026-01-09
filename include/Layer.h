@@ -10,13 +10,22 @@ class Layer {
 public:
 	size_t nodesIn;
 	size_t numNodes;
-	std::vector<std::vector<double>> costGradientWeights;
-	std::vector<double> costGradientBiases;
+
+	// Basic values
 	std::vector<std::vector<double>> weights;
 	std::vector<double> biases;
 
+	// cost gradient storage
+	std::vector<std::vector<double>> costGradientWeights;
+	std::vector<double> costGradientBiases;
+
+	// backpropagation information
 	std::vector<std::vector<double>> batchOutputs;
 	std::vector<std::vector<double>> batchErrorSignals;
+
+	// Momentum implementation
+	std::vector<std::vector<double>> velocityWeights;
+	std::vector<double> velocityBiases;
 
 	Layer(size_t inputN, size_t currentN);
 
@@ -28,7 +37,7 @@ public:
 	 */
 	std::vector<double> calculateLayerOutput(const std::vector<double>& inputs, const std::string& activationFunctionName);
 
-	void applyGradients(double learningRate);
+	void applyGradients(double learningRate, double beta);
 
 	/**
 	 * Used only for backpropagation of output layer. must be done before any other backpropagation

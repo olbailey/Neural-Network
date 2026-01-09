@@ -19,6 +19,9 @@ Layer::Layer(const size_t inputN, const size_t currentN) {
 	costGradientBiases = Numpty::zeros(currentN);
 	weights = Numpty::xavier(currentN, inputN);
 	biases = Numpty::zeros(currentN);
+
+	velocityWeights = Numpty::zeros(currentN, inputN);
+	velocityBiases = Numpty::zeros(currentN);
 }
 
 vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName) {
@@ -39,12 +42,18 @@ vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const s
 	return layerOutputs;
 }
 
-void Layer::applyGradients(const double learningRate) {
+void Layer::applyGradients(const double learningRate, const double beta) {
 	for (size_t i = 0; i < numNodes; i++) {
-		biases[i] -= costGradientBiases[i] * learningRate;
+		velocityBiases[i] = beta * velocityBiases[i]
+			+ (1.0 - beta) * costGradientBiases[i];
+
+		biases[i] -= velocityBiases[i] * learningRate;
 
 		for (int j = 0; j < nodesIn; j++) {
-			weights[i][j] -= costGradientWeights[i][j] * learningRate;
+			velocityWeights[i][j] = beta * velocityWeights[i][j]
+				+ (1.0 - beta) * costGradientWeights[i][j];
+
+			weights[i][j] -= velocityWeights[i][j] * learningRate;
 		}
 	}
 	Numpty::resetMatrixToZero(costGradientWeights);

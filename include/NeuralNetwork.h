@@ -11,6 +11,7 @@ class NeuralNetwork {
 	std::vector<Layer> layers;
 	size_t size;
 	double learningRate;
+	static constexpr double beta = 0.95; // momentum implementation
 	size_t iterations = 0;
 
 	const std::vector<std::vector<double>>& data;

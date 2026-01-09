@@ -19,7 +19,7 @@ int main() {
 	const vector<int> labels = fileInfo.getLabels();
 	// DataStorage::retrieveData(bob, "delete");
 
-	auto bob = NeuralNetwork(data, labels, { 2, 2, 2 }, 0.03, BATCH_SIZE);
+	auto bob = NeuralNetwork(data, labels, { 2, 4, 2 }, 0.0003, BATCH_SIZE);
 
 	bob.train(TRAINING_SPLIT);
 	// DataStorage::saveData(bob, "");
