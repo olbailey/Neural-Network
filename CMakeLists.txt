@@ -12,8 +12,6 @@ set(APP_SOURCES
         src/Layer.cpp
         src/NeuralNetwork.cpp
         src/DataStorage.cpp
-        src/AdamOptimiser.cpp
-        src/AdamLayer.cpp
 )
 
 add_executable(Neural-Network ${APP_SOURCES})
