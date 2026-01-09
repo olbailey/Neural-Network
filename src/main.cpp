@@ -10,10 +10,10 @@ using std::vector;
 #include "DataStorage.h"
 
 int main() {
-	constexpr int BATCH_SIZE = 50;
-	constexpr double TRAINING_SPLIT = 0.8;
+	constexpr int BATCH_SIZE = 64;
+	constexpr double TRAINING_SPLIT = 0.85;
 
-	auto fileInfo = CsvReader("../data/test1.csv");
+	auto fileInfo = CsvReader("../data/centralCircleSmall.csv");
 
 	const vector<vector<double>> data = fileInfo.getData();
 	const vector<int> labels = fileInfo.getLabels();

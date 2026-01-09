@@ -37,7 +37,7 @@ void NeuralNetwork::train(const double trainingSplit) {
 
 	while (!stopped) {
 		// Train neural network
-		for (int i = 1; i < N / batchSize; ++i) {
+		for (int i = 1; i < trainingData.size() / batchSize; ++i) {
 			const size_t startPoint = batchSize * (i - 1);
 			size_t endPoint = batchSize * i;
 
