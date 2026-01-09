@@ -58,6 +58,8 @@ private:
 	template<class T>
 	std::vector<T> randomiseVector(const std::vector<T>& values, const std::vector<size_t>& randomIndices);
 
+	void printNetworkPerformance();
+
 	static void threadExample(bool& stopped);
 
 	// For debugging

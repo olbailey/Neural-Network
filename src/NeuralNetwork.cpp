@@ -26,14 +26,14 @@ NeuralNetwork::NeuralNetwork(const vector<vector<double>>& data, const vector<in
 void NeuralNetwork::train(const double trainingSplit) {
 	loadData(trainingSplit);
 
-	clock_t beginTime = -30000;
-	double previousCost = 1000;
 	bool stopped = false;
 
 	// Threads operation
-	// std::thread terminateThread([this, &stopped] {
-	// 		threadExample(stopped);
-	// 	});
+	std::thread terminateThread([this, &stopped] {
+			threadExample(stopped);
+		});
+
+	printNetworkPerformance();
 
 	while (!stopped) {
 		// Train neural network
@@ -48,35 +48,21 @@ void NeuralNetwork::train(const double trainingSplit) {
 			const vector<int> labelsBatch = Numpty::copy(trainingLabels, startPoint, endPoint);
 
 			auto batchOutput = forwardPass(trainingBatch);
-			// const double lossValue = loss(batchOutput, labelsBatch);
 			backpropagation(trainingBatch, labelsBatch);
 			applyGradients();
-			// throw std::runtime_error("Batch complete");
-			// std::cout << lossValue << '\n';
 		}
 
-		if (clock() - beginTime > 3000 || iterations % 1000 == 0) {
-			beginTime = clock();
-			const double costValue = loss(forwardPass(trainingData), trainingLabels);
-
-			// if (previousCost - costValue < 0.0001) {
-			// 	stopped = true;
-			// }
-
-			previousCost = costValue;
-			std::cout << costValue << std::endl;
-
-			const double accuracy = cost(forwardPass(testingData), testingLabels);
-			std::cout << accuracy << "/" << testingData.size() << '\n' << '\n';
-		}
 		iterations++;
+
+		if (iterations % 1000 == 0)
+			printNetworkPerformance();
 	}
 	std::cout << loss(trainingData, trainingLabels) << std::endl;
 	DataStorage::saveData(*this, "");
 
-	// if (terminateThread.joinable()) {
-	// 	terminateThread.join();
-	// }
+	if (terminateThread.joinable()) {
+		terminateThread.join();
+	}
 }
 
 vector<vector<double>> NeuralNetwork::forwardPass(const vector<vector<double> > &inputs) {
@@ -110,15 +96,16 @@ void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, 
 
 	// output layer //
 	Layer& currentLayer = layers[size - 1];
+	const Layer& previousHiddenLayer = layers[size - 2];
 
 	currentLayer.batchErrorSignals.clear();
 	currentLayer.batchErrorSignals.reserve(batchSize);
 	for (int j = 0; j < batchSize; ++j) {
-		vector<double> errorSignal = Numpty::hotVectorOutput(currentLayer.batchInputs[j], correctedLabels[j], currentLayer.numNodes);
+		vector<double> errorSignal = Numpty::hotVectorOutput(currentLayer.batchOutputs[j], correctedLabels[j], currentLayer.numNodes);
 
 		for (int numNodes = 0; numNodes < currentLayer.numNodes; ++numNodes) {
 			for (int nodesIn = 0; nodesIn < currentLayer.nodesIn; ++nodesIn) {
-				currentLayer.costGradientWeights[numNodes][nodesIn] += errorSignal[numNodes] * currentLayer.batchInputs[j][nodesIn];
+				currentLayer.costGradientWeights[numNodes][nodesIn] += errorSignal[numNodes] * previousHiddenLayer.batchOutputs[j][nodesIn];
 			}
 			currentLayer.costGradientBiases[numNodes] += errorSignal[numNodes];
 		}
@@ -127,27 +114,29 @@ void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, 
 	}
 	Numpty::multiplyByScalar(currentLayer.costGradientWeights, 1.0/batchSize);
 	Numpty::multiplyByScalar(currentLayer.costGradientBiases, 1.0/batchSize);
+	currentLayer.batchOutputs.clear();
 
 	// hidden layer //
 	Layer& hiddenCurrentLayer = layers[size - 2];
 	const Layer& previousLayer = layers[size - 1];
 
-	const vector<vector<double>> transposedWeightMatrix = Numpty::transpose(hiddenCurrentLayer.weights);
+	const vector<vector<double>> transposedWeightMatrix = Numpty::transpose(previousLayer.weights);
 	for (int j = 0; j < batchSize; ++j) {
 		vector<double> hiddenErrors = Numpty::hiddenErrors(transposedWeightMatrix, previousLayer.batchErrorSignals[j]);
 		for (int i = 0; i < hiddenErrors.size(); ++i) {
-			hiddenErrors[i] *= 1 - std::pow(previousLayer.batchInputs[j][i], 2);
+			hiddenErrors[i] *= 1 - std::pow(hiddenCurrentLayer.batchOutputs[j][i], 2);
 		}
 
 		for (int numNodes = 0; numNodes < hiddenCurrentLayer.numNodes; ++numNodes) {
 			for (int nodesIn = 0; nodesIn < hiddenCurrentLayer.nodesIn; ++nodesIn) {
-				hiddenCurrentLayer.costGradientWeights[numNodes][nodesIn] += hiddenErrors[numNodes] * hiddenCurrentLayer.batchInputs[j][nodesIn];
+				hiddenCurrentLayer.costGradientWeights[numNodes][nodesIn] += hiddenErrors[numNodes] * trainingData[j][nodesIn];
 			}
 			hiddenCurrentLayer.costGradientBiases[numNodes] += hiddenErrors[numNodes];
 		}
 	}
 	Numpty::multiplyByScalar(hiddenCurrentLayer.costGradientWeights, 1.0/batchSize);
 	Numpty::multiplyByScalar(hiddenCurrentLayer.costGradientBiases, 1.0/batchSize);
+	hiddenCurrentLayer.batchOutputs.clear();
 }
 
 void NeuralNetwork::applyGradients() {
@@ -216,6 +205,18 @@ vector<T> NeuralNetwork::randomiseVector(const vector<T>& values, const vector<s
 	return randomisedValues;
 }
 
+void NeuralNetwork::printNetworkPerformance() {
+	const auto testingPredicts = forwardPass(testingData);
+	const double costValue = loss(testingPredicts, testingLabels);
+
+	std::cout << "Iterations: " << iterations << '\n';
+
+	std::cout << costValue << std::endl;
+
+	const double accuracy = cost(testingPredicts, testingLabels);
+	std::cout << accuracy << "/" << testingData.size() << '\n' << '\n';
+}
+
 void NeuralNetwork::setLayerValues(const std::string& filePath) {
 	DataStorage::retrieveData(*this, filePath);
 }
@@ -224,8 +225,12 @@ void NeuralNetwork::printLayerValues() {
 	int i = 1;
 	for (Layer & layer : layers) {
 		std::cout << "Applying gradients to layer: " << i << '\n';
+		std::cout << "Weights:\n";
 		NumptyHelper::print2D(layer.weights);
 		NumptyHelper::print2D(layer.costGradientWeights);
+		std::cout << "biases:\n";
+		NumptyHelper::print1D(layer.biases);
+		NumptyHelper::print1D(layer.costGradientBiases);
 		i++;
 	}
 }

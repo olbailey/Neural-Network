@@ -5,9 +5,6 @@
 #include <random>
 #include <vector>
 
-#include "NumptyHelper.h"
-
-
 using std::vector;
 
 vector<vector<double>> Numpty::random(const size_t nodesOut, const size_t nodesIn) {
@@ -200,8 +197,6 @@ vector<double> Numpty::logarithm(const vector<vector<double>> &inputs, const vec
 	for (size_t i = 0; i < trueIndex.size(); i++) {
 		if (inputs[i][trueIndex[i]] <= 0) throw std::runtime_error("cannot perform log on values <= 0");
 		outputs[i] = std::log(inputs[i][trueIndex[i]]);
-		if (std::isnan(outputs[i])) throw std::runtime_error("LOG NaN detected!");
-		if (std::isinf(outputs[i])) throw std::runtime_error("LOG Inf detected!");
 	}
 
 	return outputs;
@@ -209,13 +204,12 @@ vector<double> Numpty::logarithm(const vector<vector<double>> &inputs, const vec
 
 vector<double> Numpty::hotVectorOutput(const vector<double>& outputs, const int label, const int classesNum) {
 	vector<double> values(classesNum);
-	const double output = outputs[label];
 
 	for (int i = 0; i < classesNum; ++i) {
 		if (i == label)
-			values[i] = output - 1;
+			values[i] = outputs[i] - 1;
 		else
-			values[i] = output;
+			values[i] = outputs[i];
 	}
 
 	return values;

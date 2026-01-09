@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <iostream>
 #include <string>
 
 #include "Numpty.h"
-#include "NumptyHelper.h"
 
 using std::vector;
 using std::exp;
@@ -23,7 +23,6 @@ Layer::Layer(const size_t inputN, const size_t currentN) {
 
 vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName) {
 	vector<double> layerOutputs(numNodes);
-	batchInputs.push_back(inputs);
 
 	for (size_t i = 0; i < numNodes; i++) {
 		layerOutputs[i] = Numpty::dot(inputs, weights[i]) + biases[i];
@@ -36,6 +35,7 @@ vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const s
 	else if (activationFunctionName == "Softmax")
 		softmax(layerOutputs);
 
+	batchOutputs.push_back(layerOutputs);
 	return layerOutputs;
 }
 
@@ -60,12 +60,6 @@ void Layer::sigmoid(vector<double>& inputs) {
 void Layer::hyperbolicTangent(vector<double>& inputs) {
 	for (double & input : inputs) {
 		input = std::tanh(input);
-		checkInvalidNum(input);
-
-		/* This is equivalent to (e^x - e^-x) / (e^x + e^-x)
-		 * because multiply fraction by e^x/e^x,
-		 * and it simplifies to (e^2x - 1) / (e^2x + 1)
-		 */
 	}
 }
 
@@ -73,16 +67,13 @@ void Layer::softmax(vector<double>& inputs) {
 	const double maxVal = *std::ranges::max_element(inputs);
 
 	for (double & input : inputs) {
-		checkInvalidNum(input);
 		input = exp(input - maxVal);
-		checkInvalidNum(input);
 	}
 
 	const double normBase = Numpty::sum(inputs);
 
 	for (double & input : inputs) {
 		input = input / normBase;
-		checkInvalidNum(input);
 	}
 
 	if (Numpty::sum(inputs) < 0.99) {
