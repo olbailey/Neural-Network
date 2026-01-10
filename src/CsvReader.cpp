@@ -46,5 +46,3 @@ CsvReader::CsvReader(const std::string& fileName) {
 vector<vector<double>> CsvReader::getData() { return data; }
 
 vector<int> CsvReader::getLabels() { return labels; }
-
-vector<std::string> CsvReader::getHeaders() { return headers; }

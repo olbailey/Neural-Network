@@ -49,7 +49,7 @@ void NeuralNetwork::train(const double trainingSplit) {
 			const vector<vector<double>> trainingBatch = Numpty::deepCopy2D(trainingData, startPoint, endPoint);
 			const vector<int> labelsBatch = Numpty::copy(trainingLabels, startPoint, endPoint);
 
-			auto batchOutput = forwardPass(trainingBatch);
+			auto batchOutput = forwardPass(trainingBatch, false);
 			backpropagation(trainingBatch, labelsBatch);
 			applyGradients();
 		}
@@ -67,15 +67,15 @@ void NeuralNetwork::train(const double trainingSplit) {
 	}
 }
 
-vector<vector<double>> NeuralNetwork::forwardPass(const vector<vector<double> > &inputs) {
+vector<vector<double>> NeuralNetwork::forwardPass(const vector<vector<double> > &inputs, const bool simulation) {
 	vector<vector<double>> batchOutput;
 	vector<double> outputs(inputs[0].size());
 	for (const auto & input : inputs) {
-		outputs = layers[0].calculateLayerOutput(input, "Tanh");
+		outputs = layers[0].calculateLayerOutput(input, "Tanh", simulation);
 		for (size_t j = 1; j < size - 1; j++) {
-			outputs = layers[j].calculateLayerOutput(outputs, "Tanh");
+			outputs = layers[j].calculateLayerOutput(outputs, "Tanh", simulation);
 		}
-		batchOutput.push_back(layers[size - 1].calculateLayerOutput(outputs, "Softmax"));
+		batchOutput.push_back(layers[size - 1].calculateLayerOutput(outputs, "Softmax", simulation));
 	}
 	return batchOutput;
 }
@@ -92,14 +92,14 @@ double NeuralNetwork::loss(const vector<vector<double>>& predicts, const vector<
 }
 
 void NeuralNetwork::backpropagation(const vector<vector<double>>& trainingData, const vector<int> &trainingLabels) {
-	vector<double> networkErrors(size - 1);
-
 	Layer::backpropagationOutputLayer
 		(layers[size - 1], layers[size - 2], trainingLabels);
 
-	for (int i = size - 2; i >= 0; --i) {
-		Layer::backpropagationHiddenLayer(layers[i], layers[i + 1], trainingData);
+	for (int i = size - 2; i > 0; --i) {
+		Layer::backpropagationHiddenLayer(layers[i], layers[i + 1], layers[i - 1].batchOutputs);
 	}
+
+	Layer::backpropagationHiddenLayer(layers[0], layers[1], trainingData);
 }
 
 void NeuralNetwork::applyGradients() {
@@ -169,15 +169,13 @@ vector<T> NeuralNetwork::randomiseVector(const vector<T>& values, const vector<s
 }
 
 void NeuralNetwork::printNetworkPerformance() {
-	const auto testingPredicts = forwardPass(testingData);
-	const double costValue = loss(testingPredicts, testingLabels);
+	const auto testingPredicts = forwardPass(testingData, true);
 
 	std::cout << "Iterations: " << iterations << '\n';
 	// std::cout << "Training Data Loss: " << loss(forwardPass(trainingData), trainingLabels) << std::endl;
-	std::cout << "Testing Data Loss: " << costValue << std::endl;
+	std::cout << "Testing Data Loss: " << loss(testingPredicts, testingLabels) << std::endl;
 
-	const double accuracy = cost(testingPredicts, testingLabels);
-	std::cout << "Accuracy: " << accuracy << "/" << testingData.size() << '\n' << '\n';
+	std::cout << "Accuracy: " << cost(testingPredicts, testingLabels) << "/" << testingData.size() << '\n' << '\n';
 }
 
 void NeuralNetwork::setLayerValues(const std::string& filePath) {

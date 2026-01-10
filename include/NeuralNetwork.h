@@ -36,7 +36,7 @@ public:
 	static std::vector<size_t> randomisedIndexes(int n) ;
 
 private:
-	std::vector<std::vector<double>> forwardPass(const std::vector<std::vector<double> > &inputs);
+	std::vector<std::vector<double>> forwardPass(const std::vector<std::vector<double>> &inputs, bool simulation);
 
 	/**
 	 * Implementation of categorical cross-entropy loss

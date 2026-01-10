@@ -14,8 +14,6 @@ public:
 
 	std::vector<int> getLabels();
 
-	std::vector<std::string> getHeaders();
-
 private:
 	std::vector<std::string> headers;
 	std::vector<int> labels;

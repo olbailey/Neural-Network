@@ -33,9 +33,10 @@ public:
 	 * Forward pass of layer
 	 * @param inputs The values
 	 * @param activationFunctionName Name of activation function to be used (Sigmoid, Tanh, Softmax)
+	 * @param simulation
 	 * @return Vector values with activation function applied
 	 */
-	std::vector<double> calculateLayerOutput(const std::vector<double>& inputs, const std::string& activationFunctionName);
+	std::vector<double> calculateLayerOutput(const std::vector<double> &inputs, const std::string &activationFunctionName, bool simulation);
 
 	void applyGradients(double learningRate, double beta);
 

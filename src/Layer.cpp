@@ -24,7 +24,7 @@ Layer::Layer(const size_t inputN, const size_t currentN) {
 	velocityBiases = Numpty::zeros(currentN);
 }
 
-vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName) {
+vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const std::string& activationFunctionName, const bool simulation) {
 	vector<double> layerOutputs(numNodes);
 
 	for (size_t i = 0; i < numNodes; i++) {
@@ -38,7 +38,9 @@ vector<double> Layer::calculateLayerOutput(const vector<double>& inputs, const s
 	else if (activationFunctionName == "Softmax")
 		softmax(layerOutputs);
 
-	batchOutputs.push_back(layerOutputs);
+	if (!simulation)
+		batchOutputs.push_back(layerOutputs);
+
 	return layerOutputs;
 }
 
